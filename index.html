@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>声のTo Do</title>
+<meta name="theme-color" content="#f3f5f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12161d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="声のTo Do">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== ① 今日 ===== -->
+  <section id="view-today" class="view" data-view="today">
+    <header class="top">
+      <p class="eyebrow">今日のTo Do</p>
+      <h1 id="today-date" class="date">----年--月--日</h1>
+      <div class="progress" aria-live="polite">
+        <div class="bar"><span id="today-bar"></span></div>
+        <span id="today-count" class="count">0 / 0</span>
+      </div>
+    </header>
+
+    <div class="list-wrap">
+      <ul id="open-list" class="list" aria-label="未完了"></ul>
+      <p id="empty-today" class="empty" hidden>
+        まだ何もありません。<br>下のマイクを押して、やることを話してください。
+      </p>
+      <div id="done-sep" class="sep" hidden><span>完了</span><span id="done-count">0</span></div>
+      <ul id="done-list" class="list done" aria-label="完了"></ul>
+    </div>
+
+    <!-- 入力ドック -->
+    <form id="add-form" class="dock" autocomplete="off">
+      <label for="add-input" class="sr">To Doを入力</label>
+      <input id="add-input" class="add-input" type="text" enterkeyhint="done" placeholder="キーボードで入力" maxlength="200">
+      <button id="add-btn" class="add-btn" type="submit" hidden>追加</button>
+      <button id="mic-btn" class="mic" type="button" aria-label="音声で追加">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 0 0-7 0v6A3.5 3.5 0 0 0 12 15Z"/><path d="M18.5 11.5a6.5 6.5 0 0 1-13 0M12 18v3.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      </button>
+    </form>
+  </section>
+
+  <!-- ===== ② 履歴 ===== -->
+  <section id="view-history" class="view" data-view="history" hidden>
+    <header class="top">
+      <p class="eyebrow">履歴</p>
+      <h1 class="date">これまでのTo Do</h1>
+    </header>
+    <ul id="history-list" class="hist"></ul>
+    <p id="empty-history" class="empty" hidden>履歴はまだありません。<br>日付が変わると、その日のリストがここに保存されます。</p>
+  </section>
+
+  <section id="view-history-detail" class="view" data-view="history-detail" hidden>
+    <header class="top">
+      <button id="back-btn" class="back" type="button">‹ 履歴</button>
+      <h1 id="detail-date" class="date"></h1>
+      <p id="detail-summary" class="summary"></p>
+    </header>
+    <ul id="detail-open" class="list readonly"></ul>
+    <div id="detail-sep" class="sep"><span>完了</span><span id="detail-done-count">0</span></div>
+    <ul id="detail-done" class="list done readonly"></ul>
+  </section>
+
+  <!-- ===== ③ 設定 ===== -->
+  <section id="view-settings" class="view" data-view="settings" hidden>
+    <header class="top">
+      <p class="eyebrow">設定</p>
+      <h1 class="date">ルーティンワーク</h1>
+      <p class="summary">ここに登録した項目は、毎日の新しいリストに自動で入ります。</p>
+    </header>
+
+    <form id="routine-form" class="row-form" autocomplete="off">
+      <label for="routine-input" class="sr">ルーティンを追加</label>
+      <input id="routine-input" type="text" placeholder="例：朝のストレッチ" maxlength="200" enterkeyhint="done">
+      <button type="submit" class="btn primary">追加</button>
+    </form>
+
+    <ul id="routine-list" class="routines"></ul>
+    <p id="empty-routines" class="empty" hidden>ルーティンはまだありません。</p>
+
+    <button id="apply-routines" class="btn wide" type="button">今日のリストにも反映する</button>
+
+    <div class="block">
+      <h2>バックアップ</h2>
+      <p class="summary">機種変更や念のための保存用です。</p>
+      <div class="btn-row">
+        <button id="export-btn" class="btn" type="button">書き出す</button>
+        <label class="btn" for="import-file">読み込む</label>
+        <input id="import-file" type="file" accept="application/json,.json" class="sr">
+      </div>
+      <textarea id="export-area" class="export" rows="5" readonly hidden></textarea>
+    </div>
+    <p class="ver">声のTo Do v1.1</p>
+  </section>
+
+  <!-- タブ -->
+  <nav class="tabs" aria-label="画面切り替え">
+    <button type="button" class="tab" data-go="today" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.4 2.4 4.6-5"/></svg>今日
+    </button>
+    <button type="button" class="tab" data-go="history">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></svg>履歴
+    </button>
+    <button type="button" class="tab" data-go="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.8" cy="6" r="1.2"/><circle cx="4.8" cy="12" r="1.2"/><circle cx="4.8" cy="18" r="1.2"/></svg>設定
+    </button>
+  </nav>
+</div>
+
+<!-- 音声入力オーバーレイ -->
+<div id="voice-sheet" class="overlay" hidden>
+  <div class="voice">
+    <div class="pulse" aria-hidden="true"><span></span></div>
+    <p id="voice-status" class="voice-status">聞いています…</p>
+    <p id="voice-text" class="voice-text" aria-live="polite"></p>
+    <div class="btn-row center">
+      <button id="voice-cancel" class="btn" type="button">やめる</button>
+      <button id="voice-done" class="btn primary" type="button">話し終わった</button>
+    </div>
+  </div>
+</div>
+
+<!-- 編集シート -->
+<div id="edit-sheet" class="overlay sheet-wrap" hidden>
+  <form id="edit-form" class="sheet" autocomplete="off">
+    <h2 id="edit-title">To Doを編集</h2>
+    <label for="edit-input" class="sr">内容</label>
+    <textarea id="edit-input" rows="3" maxlength="200" enterkeyhint="done"></textarea>
+    <div id="edit-time-row" class="time-row" hidden>
+      <label for="edit-time">完了時刻</label>
+      <input id="edit-time" type="time">
+    </div>
+    <div class="btn-row">
+      <button id="edit-delete" class="btn danger" type="button">削除</button>
+      <span class="grow"></span>
+      <button id="edit-cancel" class="btn" type="button">キャンセル</button>
+      <button class="btn primary" type="submit">保存</button>
+    </div>
+  </form>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="date.js"></script>
+<script src="storage.js"></script>
+<script src="speech.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
