@@ -28,9 +28,10 @@
    days[YYYY-MM-DD] = { date, createdAt, items: [Item] }
    Item = {
      id, text, done, createdAt, completedAt, date, order,
-     source: 'keyboard' | 'voice' | 'routine',
+     source: 'keyboard' | 'voice' | 'routine' | 'carry',
      routineId,         // ルーティン由来なら元のID
-     carriedFrom: null, // 将来「翌日に持ち越し」用（元の日付）
+     carriedFrom: null, // 繰り越し項目なら、最初に登録された日付
+     carriedFromId,     // 繰り越し元（前日）の項目ID
    }
    routines = [{ id, text, order, createdAt }]
   */
@@ -60,9 +61,56 @@
         // 新しい日：ルーティンを未完了状態で自動追加
         d.routines.slice().sort((a, b) => a.order - b.order)
           .forEach((r) => this._push(key, r.text, 'routine', r.id));
+        // その下に、前日の未完了を繰り越す
+        if (this.carryEnabled()) this._carryInto(key);
+        d.days[key].carryChecked = true;
         this.save();
       }
       return d.days[key];
+    },
+
+    // ---- 繰り越し ----
+    carryEnabled() { return this.data.settings.carryOver !== false; },
+    setCarryEnabled(on) { this.data.settings.carryOver = !!on; this.save(); },
+
+    // 繰り越し機能ができる前に作られた「今日」に、一度だけ繰り越しを行う
+    carryOnce(key) {
+      const day = this.getDay(key);
+      if (!day || day.carryChecked) return 0;
+      day.carryChecked = true;
+      const n = this.carryEnabled() ? this._carryInto(key) : 0;
+      this.save();
+      return n;
+    },
+
+    // 直前の日（アプリを開かなかった日があれば、最後に使った日）の未完了を key の日へ
+    // ルーティン由来の項目は毎日自動で入るので繰り越さない
+    _carryInto(key) {
+      const d = this.data;
+      const prevKey = Object.keys(d.days).filter((k) => k < key).sort().pop();
+      if (!prevKey) return 0;
+      const day = d.days[key];
+      const prev = d.days[prevKey].items
+        .filter((i) => !i.done && i.source !== 'routine')
+        .sort((a, b) => a.order - b.order);
+      const haveIds = new Set(day.items.map((i) => i.carriedFromId).filter(Boolean));
+      const haveText = new Set(day.items.filter((i) => !i.done).map((i) => i.text));
+      let n = 0;
+      prev.forEach((p) => {
+        if (haveIds.has(p.id) || haveText.has(p.text)) return;
+        const it = this._push(key, p.text, 'carry');
+        it.carriedFrom = p.carriedFrom || prevKey;
+        it.carriedFromId = p.id;
+        n++;
+      });
+      if (n) {
+        // 並び：ルーティン → 繰り越し → その日に追加した項目
+        const rank = (i) => (i.source === 'routine' ? 0 : i.source === 'carry' ? 1 : 2);
+        day.items.slice()
+          .sort((a, b) => rank(a) - rank(b) || a.order - b.order)
+          .forEach((i, idx) => { i.order = idx + 1; });
+      }
+      return n;
     },
     getDay(key) { return this.data.days[key] || null; },
 

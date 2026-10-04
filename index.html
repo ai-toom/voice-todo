@@ -90,6 +90,17 @@
     <button id="apply-routines" class="btn wide" type="button">今日のリストにも反映する</button>
 
     <div class="block">
+      <h2>繰り越し</h2>
+      <label class="switch-row" for="carry-toggle">
+        <span>
+          <span class="switch-title">未完了を翌日に繰り越す</span>
+          <span class="summary">終わらなかった項目を、翌日のルーティンの下に自動で入れます。</span>
+        </span>
+        <input id="carry-toggle" type="checkbox" class="switch" role="switch" checked>
+      </label>
+    </div>
+
+    <div class="block">
       <h2>バックアップ</h2>
       <p class="summary">機種変更や念のための保存用です。</p>
       <div class="btn-row">
@@ -99,7 +110,7 @@
       </div>
       <textarea id="export-area" class="export" rows="5" readonly hidden></textarea>
     </div>
-    <p class="ver">声のTo Do v1.1</p>
+    <p class="ver">声のTo Do v1.2</p>
   </section>
 
   <!-- タブ -->

@@ -20,7 +20,9 @@
     if (k !== state.day) {
       const first = state.day === null;
       state.day = k;
-      Store.ensureDay(k); // 新しい日：ルーティン入りのリストを作成（前日分は履歴として残る）
+      Store.ensureDay(k); // 新しい日：ルーティン＋前日の未完了でリストを作成（前日分は履歴として残る）
+      const carried = Store.carryOnce(k);
+      if (carried && first) setTimeout(() => toast(`前日の未完了 ${carried}件を繰り越しました`), 300);
       renderAll();
       if (!first) toast(`${DateUtil.shortLabel(k)}のリストを始めました`);
       return true;
@@ -30,7 +32,11 @@
 
   // ================= 今日 =================
   function itemHtml(item, readonly) {
-    const tag = item.source === 'routine' ? '<span class="tag">毎日</span>' : '';
+    let tag = item.source === 'routine' ? '<span class="tag">毎日</span>' : '';
+    if (item.source === 'carry' && item.carriedFrom) {
+      const p = DateUtil.parts(item.carriedFrom);
+      tag = `<span class="tag carry">繰越 ${p.m}/${p.d}〜</span>`;
+    }
     const when = item.done && item.completedAt ? `<span class="when">${DateUtil.timeLabel(item.completedAt)} 完了</span>` : '';
     const handle = !readonly && !item.done ? '<span class="handle" aria-hidden="true">' + GRIP_SVG + '</span>' : '';
     return `<li class="item${item.done ? ' is-done' : ''}" data-id="${item.id}">
@@ -329,7 +335,12 @@
         <button type="button" class="icon-btn del" data-act="del" aria-label="削除">${ICON_DEL}</button>
       </li>`).join('');
     $('#apply-routines').hidden = list.length === 0;
+    $('#carry-toggle').checked = Store.carryEnabled();
   }
+  $('#carry-toggle').addEventListener('change', (e) => {
+    Store.setCarryEnabled(e.target.checked);
+    toast(e.target.checked ? '未完了を翌日に繰り越します' : '繰り越しをオフにしました');
+  });
   $('#routine-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const inp = $('#routine-input');

@@ -10,6 +10,8 @@
   --accent-ink: #ffffff;
   --done: #8a94a6;
   --danger: #b4372b;
+  --carry-ink: #8a5a00;
+  --carry-soft: #fbefd7;
   --shadow: 0 6px 24px rgba(24, 32, 44, .10);
   --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", sans-serif;
   --tab-h: 58px;
@@ -21,13 +23,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #12161d; --surface: #1c222c; --ink: #e9edf3; --muted: #98a2b3; --line: #2c3442;
-    --accent: #7ea6e6; --accent-soft: #233149; --accent-ink: #0d1420; --done: #6b7487; --danger: #f08174;
+    --accent: #7ea6e6; --accent-soft: #233149; --accent-ink: #0d1420; --done: #6b7487; --danger: #f08174; --carry-ink: #f0c070; --carry-soft: #3a2f1a;
     --shadow: 0 6px 24px rgba(0, 0, 0, .45); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #12161d; --surface: #1c222c; --ink: #e9edf3; --muted: #98a2b3; --line: #2c3442;
-  --accent: #7ea6e6; --accent-soft: #233149; --accent-ink: #0d1420; --done: #6b7487; --danger: #f08174;
+  --accent: #7ea6e6; --accent-soft: #233149; --accent-ink: #0d1420; --done: #6b7487; --danger: #f08174; --carry-ink: #f0c070; --carry-soft: #3a2f1a;
   --shadow: 0 6px 24px rgba(0, 0, 0, .45); color-scheme: dark;
 }
 
@@ -227,3 +229,16 @@ body.is-sorting { -webkit-user-select: none; user-select: none; }
 .time-row { display: flex; align-items: center; gap: 12px; }
 .time-row label { font-weight: 700; font-size: 15px; color: var(--muted); }
 .time-row input { height: 44px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); padding: 0 12px; font-size: 17px; font-variant-numeric: tabular-nums; }
+
+/* ---- v1.2 繰り越し ---- */
+.tag.carry { color: var(--carry-ink); background: var(--carry-soft); }
+.switch-row { display: flex; align-items: center; gap: 14px; background: var(--surface); border-radius: 14px; padding: 14px 16px; cursor: pointer; }
+.switch-row > span { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.switch-title { font-weight: 700; }
+.switch {
+  flex: none; appearance: none; -webkit-appearance: none; width: 52px; height: 32px; border-radius: 99px;
+  background: var(--line); position: relative; cursor: pointer; transition: background .2s; margin: 0;
+}
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.switch:checked { background: var(--accent); }
+.switch:checked::after { transform: translateX(20px); }

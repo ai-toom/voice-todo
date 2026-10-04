@@ -1,5 +1,5 @@
 // オフライン対応：アプリ本体をキャッシュ（更新時は CACHE の番号を上げる）
-const CACHE = 'voice-todo-v2';
+const CACHE = 'voice-todo-v3';
 const FILES = ['./', 'index.html', 'style.css', 'date.js', 'storage.js', 'speech.js', 'app.js',
   'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
