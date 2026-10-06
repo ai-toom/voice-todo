@@ -242,3 +242,20 @@ body.is-sorting { -webkit-user-select: none; user-select: none; }
 .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
 .switch:checked { background: var(--accent); }
 .switch:checked::after { transform: translateX(20px); }
+
+/* ---- v1.3 削除ボタン・元に戻す ---- */
+.del-btn {
+  flex: none; width: 44px; height: 60px; border: 0; background: none; padding: 0;
+  display: grid; place-items: center; color: var(--muted);
+}
+.del-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.del-btn:active { color: var(--danger); }
+.item.is-done .del-btn { margin-right: 4px; }
+.item.removing { opacity: 0; transform: translateX(24px); transition: opacity .15s, transform .15s; }
+.toast.has-action { display: flex; align-items: center; gap: 12px; text-align: left; }
+.toast.has-action[hidden] { display: none; }
+.toast-msg { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.toast-action {
+  flex: none; border: 0; background: none; color: inherit; font-weight: 800; font-size: 15px;
+  padding: 6px 4px; text-decoration: underline; text-underline-offset: 3px;
+}

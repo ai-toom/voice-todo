@@ -186,13 +186,23 @@
       this.save();
       return true;
     },
+    // 削除した項目を返す（「元に戻す」用）
     deleteItem(key, id) {
       const day = this.getDay(key);
-      if (!day) return false;
-      const n = day.items.length;
+      if (!day) return null;
+      const item = day.items.find((i) => i.id === id);
+      if (!item) return null;
       day.items = day.items.filter((i) => i.id !== id);
       this.save();
-      return day.items.length < n;
+      return item;
+    },
+    // 削除を取り消す（並び順・完了状態もそのまま戻る）
+    restoreItem(key, item) {
+      const day = this.getDay(key);
+      if (!day || !item || day.items.some((i) => i.id === item.id)) return false;
+      day.items.push(item);
+      this.save();
+      return true;
     },
 
     // ---- ルーティン ----

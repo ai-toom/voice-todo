@@ -3,6 +3,7 @@
   const $ = (s) => document.querySelector(s);
   const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5.5 12.5 4.2 4.2 8.8-9.4"/></svg>';
+  const TRASH_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.8h5V7M7 7l.8 12.2h8.4L17 7M10.3 10.5v5.5M13.7 10.5v5.5"/></svg>';
   const GRIP_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
 
   const state = {
@@ -44,6 +45,7 @@
         aria-pressed="${item.done}" aria-label="${item.done ? '未完了に戻す' : '完了にする'}：${esc(item.text)}">
         <span class="box">${CHECK_SVG}</span></button>
       <button type="button" class="text" ${readonly ? 'tabindex="-1"' : ''}><span class="text-main">${esc(item.text)}</span>${tag}${when}</button>
+      ${readonly ? '' : `<button type="button" class="del-btn" aria-label="削除：${esc(item.text)}">${TRASH_SVG}</button>`}
       ${handle}
     </li>`;
   }
@@ -71,6 +73,19 @@
     if (!li || e.target.closest('.handle') || dragJustEnded) return;
     checkDay();
     const id = li.dataset.id;
+    if (e.target.closest('.del-btn')) {
+      // その場で削除し、数秒間だけ「元に戻す」を出す
+      const day = state.day;
+      const removed = Store.deleteItem(day, id);
+      if (!removed) return;
+      li.classList.add('removing');
+      setTimeout(() => renderToday(), 160);
+      toast(`削除しました：${removed.text}`, 5000, {
+        label: '元に戻す',
+        fn: () => { if (Store.restoreItem(day, removed) && day === state.day) renderToday(removed.id); },
+      });
+      return;
+    }
     if (e.target.closest('.check')) {
       const item = Store.toggle(state.day, id);
       renderToday(item && item.id);
@@ -158,7 +173,8 @@
       Store.reorder(state.day, ids);
       renderToday(moved);
     }
-    dragJustEnded = true; setTimeout(() => { dragJustEnded = false; }, 300);
+    // 指を動かしたときだけ、直後のタップを少しだけ無視する（誤タップ防止）
+    if (Math.abs(d.lastY - d.startY) > 6) { dragJustEnded = true; setTimeout(() => { dragJustEnded = false; }, 150); }
   }
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
@@ -426,9 +442,20 @@
 
   // ================= トースト =================
   let toastT;
-  function toast(msg, ms = 2400) {
+  function toast(msg, ms = 2400, action) {
     const t = $('#toast');
-    t.textContent = msg; t.hidden = false;
+    t.textContent = '';
+    const span = document.createElement('span');
+    span.className = 'toast-msg'; span.textContent = msg;
+    t.appendChild(span);
+    if (action) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'toast-action'; b.textContent = action.label;
+      b.addEventListener('click', () => { t.hidden = true; clearTimeout(toastT); action.fn(); });
+      t.appendChild(b);
+    }
+    t.classList.toggle('has-action', !!action);
+    t.hidden = false;
     clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, ms);
   }
 
